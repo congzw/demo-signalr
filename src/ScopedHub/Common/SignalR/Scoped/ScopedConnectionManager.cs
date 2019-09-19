@@ -8,18 +8,17 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Common.SignalR.Scoped
 {
-    public class ScopedConnectionManager
+    public class ScopedHubManager
     {
         private readonly IScopedConnectionRepository _repository;
-            
 
-        public ScopedConnectionManager(IScopedConnectionRepository repository)
+        public ScopedHubManager(IScopedConnectionRepository repository)
         {
             _repository = repository;
-            HubDict = new ConcurrentDictionary<string, HubCallerContext>(StringComparer.OrdinalIgnoreCase);
+            ScopedContexts = new ConcurrentDictionary<string, HubCallerContext>(StringComparer.OrdinalIgnoreCase);
         }
 
-        public IDictionary<string, HubCallerContext> HubDict { get; set; }
+        public IDictionary<string, HubCallerContext> ScopedContexts { get; set; }
 
         public async Task OnConnected(Hub hub)
         {
@@ -40,49 +39,18 @@ namespace Common.SignalR.Scoped
 
             if (!string.IsNullOrWhiteSpace(conn.ClientId))
             {
-                //scoped clients with same clientId should be kicked off
+                //scoped clients with same clientId, old should be kicked off
                 var scopedClientKey = ScopedClientKey.Create().WithClientId(conn.ClientId).WithScopeGroupId(conn.ScopeGroupId);
                 var oneKey = scopedClientKey.ToOneKey();
-                if (HubDict.TryGetValue(oneKey, out var oldClientHub))
+                if (ScopedContexts.TryGetValue(oneKey, out var oldClientHub))
                 {
-                    await KickSameScopedClient(hub, oldClientHub, scopedClientKey);
+                    await KickSameScopedClient(hub, oldClientHub, scopedClientKey).ConfigureAwait(false);
                 }
-                HubDict[oneKey] = hub.Context;
+                ScopedContexts[oneKey] = hub.Context;
             }
             
-            await hub.Groups.AddToGroupAsync(conn.ConnectionId, conn.ScopeGroupId);
-            await UpdateScopedConnections(hub, conn.ScopeGroupId);
-        }
-
-        private async Task KickSameScopedClient(Hub hub, HubCallerContext oldClientHub, ScopedClientKey scopedClientKey)
-        {
-            if (oldClientHub == null)
-            {
-                return;
-            }
-
-            //already exist, should kick!
-            var oldConnectionId = oldClientHub.ConnectionId;
-            var theConn = _repository.GetScopedConnection(oldConnectionId);
-            if (theConn != null)
-            {
-                var clientProxy = hub.Clients.Client(oldConnectionId);
-                if (clientProxy != null)
-                {
-                    var scopedConnections = _repository.GetScopedConnections(scopedClientKey.ScopeGroupId);
-                    var connections = scopedConnections.OrderBy(x => x.CreateAt).ToList();
-                    var theOne = connections.SingleOrDefault(x => x.ConnectionId.Equals(oldConnectionId));
-                    if (theOne != null)
-                    {
-                        var oneKey = scopedClientKey.ToOneKey();
-                        var message = string.Format("{0} is kicked by another same scoped client!", oneKey);
-                        theOne.Desc = message;
-                    }
-                    await clientProxy.SendAsync(ScopedConnection.CallBackUpdateScopedConnections, connections);
-                }
-            }
-            _repository.RemoveScopedConnection(oldConnectionId);
-            oldClientHub.Abort();
+            await hub.Groups.AddToGroupAsync(conn.ConnectionId, conn.ScopeGroupId).ConfigureAwait(false);
+            await UpdateScopedConnections(hub, conn.ScopeGroupId).ConfigureAwait(false);
         }
 
         public async Task OnDisconnected(Hub hub, Exception exception)
@@ -105,8 +73,8 @@ namespace Common.SignalR.Scoped
                 conn.Desc += ", " + exception.Message;
             }
             _repository.RemoveScopedConnection(connectionId);
-            await hub.Groups.RemoveFromGroupAsync(connectionId, conn.ScopeGroupId);
-            await UpdateScopedConnections(hub, conn.ScopeGroupId);
+            await hub.Groups.RemoveFromGroupAsync(connectionId, conn.ScopeGroupId).ConfigureAwait(false);
+            await UpdateScopedConnections(hub, conn.ScopeGroupId).ConfigureAwait(false);
         }
         
         public Task UpdateScopedConnectionBags(Hub hub, IDictionary<string, object> bags)
@@ -138,13 +106,36 @@ namespace Common.SignalR.Scoped
             var connections = scopedConnections.OrderBy(x => x.CreateAt).ToList();
             return hub.Clients.Group(scopeGroupId).SendAsync(ScopedConnection.CallBackUpdateScopedConnections, connections);
         }
-    }
 
-    public class ScopedHubCallerContext
-    {
-        public string ScopeGroupId { get; set; }
-        public string ClientId { get; set; }
-        public string ConnectionId { get; set; }
-        public HubCallerContext Context { get; set; }
+        private async Task KickSameScopedClient(Hub hub, HubCallerContext oldClientHub, ScopedClientKey scopedClientKey)
+        {
+            if (oldClientHub == null)
+            {
+                return;
+            }
+
+            //already exist, should kick!
+            var oldConnectionId = oldClientHub.ConnectionId;
+            var theConn = _repository.GetScopedConnection(oldConnectionId);
+            if (theConn != null)
+            {
+                var clientProxy = hub.Clients.Client(oldConnectionId);
+                if (clientProxy != null)
+                {
+                    var scopedConnections = _repository.GetScopedConnections(scopedClientKey.ScopeGroupId);
+                    var connections = scopedConnections.OrderBy(x => x.CreateAt).ToList();
+                    var theOne = connections.SingleOrDefault(x => x.ConnectionId.Equals(oldConnectionId));
+                    if (theOne != null)
+                    {
+                        var oneKey = scopedClientKey.ToOneKey();
+                        var message = string.Format("{0} is kicked by another same scoped client!", oneKey);
+                        theOne.Desc = message;
+                    }
+                    await clientProxy.SendAsync(ScopedConnection.CallBackUpdateScopedConnections, connections).ConfigureAwait(false);
+                }
+            }
+            _repository.RemoveScopedConnection(oldConnectionId);
+            oldClientHub.Abort();
+        }
     }
 }

@@ -8,9 +8,9 @@ namespace Common.SignalR.Scoped
 {
     public class ScopedHub : Hub
     {
-        private readonly ScopedConnectionManager _connectionManager;
+        private readonly ScopedHubManager _connectionManager;
 
-        public ScopedHub(ScopedConnectionManager connectionManager)
+        public ScopedHub(ScopedHubManager connectionManager)
         {
             _connectionManager = connectionManager;
         }

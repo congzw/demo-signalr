@@ -14,7 +14,7 @@ namespace ScopedHub
 
             services.AddSingleton(ScopedConnectionParamParse.Resolve());
             services.AddSingleton<IScopedConnectionRepository, MemoryScopedConnectionRepository>();
-            services.AddSingleton<ScopedConnectionManager>();
+            services.AddSingleton<ScopedHubManager>();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
