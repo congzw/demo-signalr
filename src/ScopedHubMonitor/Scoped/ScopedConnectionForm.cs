@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Windows.Forms;
 using Common;
@@ -45,14 +46,13 @@ namespace ScopedHubMonitor.Scoped
             UpdateState(connected: false);
         }
 
-        private void btnUpdate_Click(object sender, EventArgs e)
+        private async void btnUpdate_Click(object sender, EventArgs e)
         {
             try
             {
-                //todo udpate
-                //var deviceInfo = GetDeviceInfo();
-                //this.cbxState.SelectedIndex = deviceInfo.State == DeviceState.Online ? 0 : 1;
-                //await _connection.InvokeAsync("UpdateDeviceInfo", deviceInfo);
+                var bags = new Dictionary<string, object>();
+                bags["foo"] = "foo[" + DateHelper.Instance.GetDateNow().Ticks + "]";
+                await Ctrl.UpdateBags(bags, Log);
             }
             catch (Exception ex)
             {

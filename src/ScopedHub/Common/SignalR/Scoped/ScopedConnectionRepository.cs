@@ -73,6 +73,8 @@ namespace Common.SignalR.Scoped
 
             connDic[conn.ConnectionId] = conn;
             ConnectionScopes[conn.ConnectionId] = conn.ScopeGroupId;
+            conn.LastUpdateAt = DateHelper.Instance.GetDateNow();
+            conn.UpdateDesc();
         }
 
         public void RemoveScopedConnection(string connectionId)

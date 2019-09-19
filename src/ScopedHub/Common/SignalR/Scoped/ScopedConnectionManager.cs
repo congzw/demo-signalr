@@ -63,15 +63,32 @@ namespace Common.SignalR.Scoped
         
         public Task UpdateScopedConnectionBags(Hub hub, IDictionary<string, object> bags)
         {
-            return Task.FromResult(0);
-            //todo
+            if (bags == null || bags.Count == 0)
+            {
+                return Task.FromResult(0);
+            }
+
+            var connectionId = hub.Context.ConnectionId;
+            var conn = _repository.GetScopedConnection(connectionId);
+            if (conn == null)
+            {
+                return Task.FromResult(0);
+            }
+
+            foreach (var bag in bags)
+            {
+                conn.Bags[bag.Key] = bag.Value;
+            }
+
+            _repository.AddOrUpdateScopedConnection(conn);
+            return UpdateScopedConnections(hub, conn.ScopeGroupId);
         }
 
         public Task UpdateScopedConnections(Hub hub, string scopeGroupId)
         {
             var scopedConnections = _repository.GetScopedConnections(scopeGroupId);
             var connections = scopedConnections.OrderBy(x => x.CreateAt).ToList();
-            return hub.Clients.Group(scopeGroupId).SendAsync(ScopedConnection.UpdateScopedConnectionsCallBackMethod, connections);
+            return hub.Clients.Group(scopeGroupId).SendAsync(ScopedConnection.CallBackUpdateScopedConnections, connections);
         }
     }
 }

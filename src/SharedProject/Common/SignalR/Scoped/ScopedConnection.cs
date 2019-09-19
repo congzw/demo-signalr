@@ -44,6 +44,7 @@ namespace Common.SignalR.Scoped
         }
 
         public static string DefaultScopeGroup = string.Empty;
-        public static string UpdateScopedConnectionsCallBackMethod = "ScopedConnectionsUpdated";
+        public static string CallBackUpdateScopedConnections = "ScopedConnectionsUpdated";
+        public static string UpdateScopedConnectionBags = "UpdateScopedConnectionBags";
     }
 }

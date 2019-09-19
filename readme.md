@@ -13,5 +13,6 @@ Others	Calls a method on all connected clients except the client that invoked th
 ## change list
 
 - 
+- 20190919 add update bags demo
 - 20190919 add scoped hub demo
 - 20190919 init projects

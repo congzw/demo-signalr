@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 // ReSharper disable CheckNamespace
@@ -24,6 +25,11 @@ namespace Common.SignalR.Scoped
         {
             await _connectionManager.OnDisconnected(this, exception);
             await base.OnDisconnectedAsync(exception);
+        }
+
+        public Task UpdateScopedConnectionBags(IDictionary<string, object> bags)
+        {
+            return _connectionManager.UpdateScopedConnectionBags(this, bags);
         }
 
         public Task UpdateScopedConnections(string scopeGroupId)

@@ -7,7 +7,7 @@
     <div>
         <input type="text" id="clientId" value="Page-001" />
         <input type="text" id="scopeGroupId" value="Scope-001" />
-        <input type="button" id="refresh" value="Update" />
+        <input type="button" id="btnUpdate" value="Update" />
         <input type="button" id="btnConnect" value="Connect" />
         <p id="updateDate"></p>
         <ul id="updateInfos"></ul>
@@ -59,9 +59,8 @@
                 connectionHub.start()
                     .then(function () {
                         console.log('connection started');
-                        document.getElementById('refresh').addEventListener('click', function (event) {
-                            var scopeGroupId = document.getElementById('scopeGroupId').value;
-                            connectionHub.invoke('UpdateScopedConnections', scopeGroupId);
+                        document.getElementById('btnUpdate').addEventListener('click', function (event) {
+                            connectionHub.invoke('UpdateScopedConnectionBags', { foo: new Date().getTime()});
                             event.preventDefault();
                         });
                     })

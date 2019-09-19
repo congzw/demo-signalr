@@ -11,7 +11,19 @@ namespace ScopedHubMonitor.Scoped
     public class ScopedConnectionFormCtrl
     {
         public HubConnection HubConn { get; set; }
-        
+
+        public async Task UpdateBags(IDictionary<string, object> bags, Action<string> logMessage)
+        {
+            if (HubConn == null || HubConn.State == HubConnectionState.Disconnected)
+            {
+                logMessage?.Invoke("Connection Not Start...");
+                return;
+            }
+
+            await HubConn.InvokeAsync(ScopedConnection.UpdateScopedConnectionBags, bags);
+            logMessage?.Invoke(ScopedConnection.UpdateScopedConnectionBags + "Invoked...");
+        }
+
         public async Task TryStartConnection(string hubUri, Action<string> logMessage)
         {
             void ScopedConnectionsUpdated(IList<ScopedConnection> connections)
@@ -29,7 +41,7 @@ namespace ScopedHubMonitor.Scoped
                 .WithUrl(hubUri)
                 .Build();
 
-            hubConnection.On<IList<ScopedConnection>>(ScopedConnection.UpdateScopedConnectionsCallBackMethod, ScopedConnectionsUpdated);
+            hubConnection.On<IList<ScopedConnection>>(ScopedConnection.CallBackUpdateScopedConnections, ScopedConnectionsUpdated);
 
             logMessage?.Invoke("Starting connection...");
             try
