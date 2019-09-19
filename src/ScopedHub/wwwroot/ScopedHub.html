@@ -60,7 +60,9 @@
                     .then(function () {
                         console.log('connection started');
                         document.getElementById('btnUpdate').addEventListener('click', function (event) {
-                            connectionHub.invoke('UpdateScopedConnectionBags', { foo: new Date().getTime()});
+
+                            var ticks = ((new Date().getTime() * 10000) + 621355968000000000);
+                            connectionHub.invoke('UpdateScopedConnectionBags', { ticks: '[' + ticks + ']' });
                             event.preventDefault();
                         });
                     })

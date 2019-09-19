@@ -51,7 +51,7 @@ namespace ScopedHubMonitor.Scoped
             try
             {
                 var bags = new Dictionary<string, object>();
-                bags["foo"] = "foo[" + DateHelper.Instance.GetDateNow().Ticks + "]";
+                bags["ticks"] = "[" + DateHelper.Instance.GetDateNow().Ticks + "]";
                 await Ctrl.UpdateBags(bags, Log);
             }
             catch (Exception ex)
