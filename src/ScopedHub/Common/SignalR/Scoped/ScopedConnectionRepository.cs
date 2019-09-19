@@ -8,10 +8,36 @@ namespace Common.SignalR.Scoped
 {
     public interface IScopedConnectionRepository
     {
+        ScopedConnection GetScopedConnectionByScopedClientKey(ScopedClientKey scopedClientKey);
         ScopedConnection GetScopedConnection(string connectionId);
         IEnumerable<ScopedConnection> GetScopedConnections(string scopeGroupId);
         void AddOrUpdateScopedConnection(ScopedConnection conn);
         void RemoveScopedConnection(string connectionId);
+    }
+
+    public class ScopedClientKey
+    {
+        public string ScopeGroupId { get; set; }
+        public string ClientId { get; set; }
+
+        public string ToOneKey()
+        {
+            return ClientId + "," + ScopeGroupId;
+        }
+        public ScopedClientKey WithScopeGroupId(string scopeGroupId)
+        {
+            ScopeGroupId = scopeGroupId;
+            return this;
+        }
+        public ScopedClientKey WithClientId(string clientId)
+        {
+            ClientId = clientId;
+            return this;
+        }
+        public static ScopedClientKey Create()
+        {
+            return new ScopedClientKey();
+        }
     }
 
     public class MemoryScopedConnectionRepository : IScopedConnectionRepository
@@ -24,6 +50,17 @@ namespace Common.SignalR.Scoped
 
         public IDictionary<string, string> ConnectionScopes { get; set; }
         public IDictionary<string, IDictionary<string, ScopedConnection>> Scopes { get; set; }
+
+        public ScopedConnection GetScopedConnectionByScopedClientKey(ScopedClientKey scopedClientKey)
+        {
+            if (scopedClientKey == null)
+            {
+                return null;
+            }
+            Scopes.TryGetValue(scopedClientKey.ScopeGroupId, out var connDic);
+            var theOne = connDic?.Values.SingleOrDefault(x => x.ClientId.Equals(scopedClientKey.ClientId, StringComparison.OrdinalIgnoreCase));
+            return theOne;
+        }
 
         public ScopedConnection GetScopedConnection(string connectionId)
         {

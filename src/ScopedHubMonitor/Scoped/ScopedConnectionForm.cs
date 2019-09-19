@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Common;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -35,9 +36,22 @@ namespace ScopedHubMonitor.Scoped
         
         private async void btnConnect_Click(object sender, EventArgs e)
         {
+            this.txtMessage.Clear();
             UpdateState(connected: false);
             await Ctrl.TryStartConnection(this.txtHubUri.Text.Trim(), Log);
+            Ctrl.HubConn.Closed += HubConn_Closed;
             UpdateState(connected: true);
+        }
+
+        private Task HubConn_Closed(Exception exception)
+        {
+            void Callback()
+            {
+                var message = exception == null ? "Abort" : exception.Message;
+                this.txtMessage.AppendText("!!! => " + message + Environment.NewLine);
+            }
+            Invoke((Action)Callback);
+            return Task.FromResult(0);
         }
 
         private async void btnDisConnect_Click(object sender, EventArgs e)

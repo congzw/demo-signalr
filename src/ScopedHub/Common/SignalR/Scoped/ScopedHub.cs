@@ -29,6 +29,7 @@ namespace Common.SignalR.Scoped
 
         public Task UpdateScopedConnectionBags(IDictionary<string, object> bags)
         {
+            //online, hide
             return _connectionManager.UpdateScopedConnectionBags(this, bags);
         }
 

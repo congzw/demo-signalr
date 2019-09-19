@@ -28,11 +28,13 @@ namespace ScopedHubMonitor.Scoped
         {
             void ScopedConnectionsUpdated(IList<ScopedConnection> connections)
             {
+                logMessage("----Changed----");
                 var sb = new StringBuilder();
                 foreach (var item in connections)
                 {
-                    item.UpdateDesc();
-                    sb.AppendFormat("ClientId={0};CreatedAt={1};ConnId={2}{3}", item.ClientId, item.CreateAt.AsFormat(), item.ConnectionId, Environment.NewLine);
+                    //item.UpdateDesc();
+                    //sb.AppendFormat("ClientId={0};CreatedAt={1};ConnId={2}{3}", item.ClientId, item.CreateAt.AsFormat(), item.ConnectionId, Environment.NewLine);
+                    sb.AppendFormat("{0}{1}", item.Desc, Environment.NewLine);
                 }
                 logMessage(sb.ToString());
             }
