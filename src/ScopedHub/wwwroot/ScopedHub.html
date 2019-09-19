@@ -1,0 +1,77 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <title>SignalR ScopedHub Demo</title>
+</head>
+<body>
+    <div>
+        <input type="text" id="clientId" value="Page-001" />
+        <input type="text" id="scopeGroupId" value="Scope-001" />
+        <input type="button" id="refresh" value="Update" />
+        <input type="button" id="btnConnect" value="Connect" />
+        <p id="updateDate"></p>
+        <ul id="updateInfos"></ul>
+    </div>
+
+    <script type="text/javascript" src="lib/signalr.min.js"></script>
+    <script src="lib/jquery-3.2.1.js"></script>
+    <script src="lib/jquery-ui.js"></script>
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            $('#btnConnect').click(function () {
+                
+                var showInfos = function (infos) {
+
+                    var $clientId = $('#clientId');
+                    $clientId.focus();
+                    var $updateInfos = $('#updateInfos');
+
+                    $("#updateDate").text('Updated at ' + new Date());
+
+                    $updateInfos.children().remove();
+
+                    for (var i = 0; i < infos.length; i++) {
+                        var info = infos[i];
+                        if (info.offline) {
+                            $('<li style="color:red">').append(info.desc).appendTo($updateInfos);
+                        }
+                        else {
+                            $('<li style="color:green">').append(info.desc).appendTo($updateInfos);
+                        }
+                    }
+                }
+
+                // Start the connection.
+                var scopeGroupId = document.getElementById('scopeGroupId').value;
+                var clientId = document.getElementById('clientId').value;
+                var connectionHub = new signalR.HubConnectionBuilder()
+                    .withUrl('/ScopedHub?scopeGroupId=' + scopeGroupId + '&clientId=' + clientId)
+                    .build();
+
+                // Create a function that the hub can call to broadcast messages.
+                connectionHub.on('ScopedConnectionsUpdated', function (infos) {
+                    showInfos(infos);
+                });
+
+                //connectionHub.qs = { scopeGroupId: scopeGroupId };
+                connectionHub.start()
+                    .then(function () {
+                        console.log('connection started');
+                        document.getElementById('refresh').addEventListener('click', function (event) {
+                            var scopeGroupId = document.getElementById('scopeGroupId').value;
+                            connectionHub.invoke('UpdateScopedConnections', scopeGroupId);
+                            event.preventDefault();
+                        });
+                    })
+                    .catch(error => {
+                        console.error(error.message);
+                    });
+
+                $(this).prop('disabled', true);
+            });
+        });
+    </script>
+</body>
+</html>

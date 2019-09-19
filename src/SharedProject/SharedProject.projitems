@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>09b20807-101e-43dc-8541-d1134b383d39</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>SharedProject</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Common\DateHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\MyModelHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\SimpleIni.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\TaskEx.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\SignalR\Scoped\ScopedConnection.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="$(MSBuildThisFileDirectory)Common\SignalR\Scoped\" />
+  </ItemGroup>
+</Project>
