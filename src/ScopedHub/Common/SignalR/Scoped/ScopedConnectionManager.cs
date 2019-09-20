@@ -8,11 +8,11 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Common.SignalR.Scoped
 {
-    public class ScopedHubManager
+    public class ScopedConnectionManager
     {
         private readonly IScopedConnectionRepository _repository;
 
-        public ScopedHubManager(IScopedConnectionRepository repository)
+        public ScopedConnectionManager(IScopedConnectionRepository repository)
         {
             _repository = repository;
             ScopedContexts = new ConcurrentDictionary<string, HubCallerContext>(StringComparer.OrdinalIgnoreCase);

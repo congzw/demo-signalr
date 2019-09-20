@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
+using Common.SignalR.Scoped;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using Common.SignalR.Scoped;
 
 namespace ScopedHub
 {
@@ -11,9 +11,7 @@ namespace ScopedHub
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSignalR();
-
-            services.AddSingleton<IScopedConnectionRepository, MemoryScopedConnectionRepository>();
-            services.AddSingleton<ScopedHubManager>();
+            services.ReplaceAnyHub();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
@@ -32,7 +30,7 @@ namespace ScopedHub
 
             app.UseSignalR(routes =>
             {
-                routes.MapHub<global::Common.SignalR.Scoped.ScopedHub>("/ScopedHub");
+                routes.MapHub<AnyHub>("/ScopedHub");
             });
         }
     }
