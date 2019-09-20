@@ -12,7 +12,6 @@ namespace ScopedHub
         {
             services.AddSignalR();
 
-            services.AddSingleton(ScopedConnectionParamParse.Resolve());
             services.AddSingleton<IScopedConnectionRepository, MemoryScopedConnectionRepository>();
             services.AddSingleton<ScopedHubManager>();
         }
@@ -33,7 +32,7 @@ namespace ScopedHub
 
             app.UseSignalR(routes =>
             {
-                routes.MapHub<Common.SignalR.Scoped.ScopedHub>("/ScopedHub");
+                routes.MapHub<global::Common.SignalR.Scoped.ScopedHub>("/ScopedHub");
             });
         }
     }

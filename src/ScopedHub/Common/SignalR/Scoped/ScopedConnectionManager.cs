@@ -29,10 +29,9 @@ namespace Common.SignalR.Scoped
             var now = DateHelper.Instance.GetDateNow();
             conn.CreateAt = now;
             conn.LastUpdateAt = now;
-            
-            var paramParse = ScopedConnectionParamParse.Resolve();
-            conn.ScopeGroupId = paramParse.TryGetParamValue(hub, nameof(conn.ScopeGroupId));
-            conn.ClientId = paramParse.TryGetParamValue(hub, nameof(conn.ClientId));
+
+            conn.ScopeGroupId = hub.TryGetQueryParameterValue(nameof(conn.ScopeGroupId), string.Empty);
+            conn.ClientId = hub.TryGetQueryParameterValue(nameof(conn.ClientId), string.Empty);
             conn.UpdateDesc();
 
             _repository.AddOrUpdateScopedConnection(conn);
