@@ -9,6 +9,7 @@ namespace Common.SignalR.Scoped
     {
         public static IServiceCollection AddScopedHub(this IServiceCollection services)
         {
+            //services.AddSingleton(sp => new HubEventBus(sp));
             services.AddSingleton<IScopedConnectionRepository, MemoryScopedConnectionRepository>();
             services.AddSingleton<ScopedConnectionManager>();
             return services;
