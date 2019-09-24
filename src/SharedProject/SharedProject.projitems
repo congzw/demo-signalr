@@ -11,11 +11,13 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Common\DateHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Common\MyModelHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\SignalR\Scoped\Events\OnDisconnected.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Common\SignalR\Scoped\ScopedConst.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Common\SimpleIni.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Common\TaskEx.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Common\SignalR\Scoped\ScopedConnection.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Common\SignalR\Scoped\" />
+    <Folder Include="$(MSBuildThisFileDirectory)Common\SignalR\Scoped\Events\" />
   </ItemGroup>
 </Project>

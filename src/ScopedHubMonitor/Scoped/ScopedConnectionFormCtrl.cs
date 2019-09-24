@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using Common;
 using Common.SignalR.Scoped;
 using Microsoft.AspNetCore.SignalR.Client;
 
@@ -20,8 +19,8 @@ namespace ScopedHubMonitor.Scoped
                 return;
             }
 
-            await HubConn.InvokeAsync(ScopedConnection.UpdateScopedConnectionBags, bags);
-            logMessage?.Invoke(ScopedConnection.UpdateScopedConnectionBags + "Invoked...");
+            await HubConn.InvokeAsync(ScopedConst.ForServer.UpdateScopedConnectionBags(), bags);
+            logMessage?.Invoke(ScopedConst.ForClient.ScopedConnectionsUpdated() + "Invoked...");
         }
 
         public async Task TryStartConnection(string hubUri, Action<string> logMessage)
@@ -43,7 +42,7 @@ namespace ScopedHubMonitor.Scoped
                 .WithUrl(hubUri)
                 .Build();
 
-            hubConnection.On<IList<ScopedConnection>>(ScopedConnection.CallBackUpdateScopedConnections, ScopedConnectionsUpdated);
+            hubConnection.On<IList<ScopedConnection>>(ScopedConst.ForClient.ScopedConnectionsUpdated(), ScopedConnectionsUpdated);
 
             logMessage?.Invoke("Starting connection...");
             try

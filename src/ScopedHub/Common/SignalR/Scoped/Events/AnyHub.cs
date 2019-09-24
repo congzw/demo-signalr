@@ -1,69 +1,43 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Threading.Tasks;
-//using Common.SignalR.Scoped.Events;
-//using Microsoft.AspNetCore.SignalR;
-//using Microsoft.Extensions.DependencyInjection;
-//// ReSharper disable CheckNamespace
+﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
+// ReSharper disable CheckNamespace
 
-//namespace Common.SignalR.Scoped
-//{
-//    #region demos
+namespace Common.SignalR.Scoped
+{
+    #region demos
 
-//    //how to let FooHub scoped:
-//    //1.  FooHubWrap : FooHub
-//    //2.  FooHubExtensions.ReplaceFooHub() => AddScopedHub & WrapHub
-//    //3.  services.ReplaceFooHub()
+    //how to let FooHub scoped and support event handle:
+    //1.  FooHub(HubEventBus bus), add methods and raise events with need. 
+    //2.  services.AddScopedHub()
 
-//    #endregion
+    #endregion
 
-//    public class AnyHub : Hub
-//    {
-//        public AnyHub()
-//        {
-//        }
-//    }
+    public class AnyHub : Hub
+    {
+        private readonly HubEventBus _hubEventBus;
 
-//    public class AnyHubWrap : AnyHub
-//    {
-//        private readonly ScopedConnectionManager _connectionManager;
-//        private readonly HubEventBus _hubEventBus;
+        public AnyHub(HubEventBus hubEventBus)
+        {
+            _hubEventBus = hubEventBus;
+        }
 
-//        public AnyHubWrap(ScopedConnectionManager connectionManager, HubEventBus hubEventBus)
-//        {
-//            _connectionManager = connectionManager;
-//            _hubEventBus = hubEventBus;
-//        }
+        public override async Task OnConnectedAsync()
+        {
+            await _hubEventBus.Raise(new OnConnectedEvent(this)).ConfigureAwait(false);
+            await base.OnConnectedAsync().ConfigureAwait(false);
+        }
 
-//        public override async Task OnConnectedAsync()
-//        {
-//            await _hubEventBus.Raise(new OnConnectedEvent(this)).ConfigureAwait(false);
-//            await base.OnConnectedAsync().ConfigureAwait(false);
-//        }
-        
-//        public override async Task OnDisconnectedAsync(Exception exception)
-//        {
-//            await _hubEventBus.Raise(new OnDisconnectedEvent(this, exception)).ConfigureAwait(false);
-//            await base.OnDisconnectedAsync(exception).ConfigureAwait(false);
-//        }
+        public override async Task OnDisconnectedAsync(Exception exception)
+        {
+            await _hubEventBus.Raise(new OnDisconnectedEvent(this, exception)).ConfigureAwait(false);
+            await base.OnDisconnectedAsync(exception).ConfigureAwait(false);
+        }
 
-//        public Task UpdateBags(IDictionary<string, object> bags)
-//        {
-//            //online, hide
-//            return _hubEventBus.Raise(new OnUpdateBags(this, bags));
-//        }
-
-//        public Task UpdateScopedConnections(string scopeGroupId)
-//        {
-//            return _connectionManager.UpdateScopedConnections(this, scopeGroupId);
-//        }
-//    }
-
-//    public static class AnyHubExtensions
-//    {
-//        public static void ReplaceAnyHub(this IServiceCollection services)
-//        {
-//            services.AddScopedHub().WrapHub<AnyHub, AnyHubWrap>();
-//        }
-//    }
-//}
+        public Task UpdateScopedConnectionBags(IDictionary<string, object> bags)
+        {
+            return _hubEventBus.Raise(new OnUpdateBagsEvent(this,  bags));
+        }
+    }
+}

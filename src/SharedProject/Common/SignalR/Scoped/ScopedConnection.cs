@@ -10,7 +10,7 @@ namespace Common.SignalR.Scoped
     {
         public ScopedConnection()
         {
-            ScopeGroupId = DefaultScopeGroup;
+            ScopeGroupId = ScopedConst.ForOther.DefaultScopeGroup();
             var now = DateHelper.Instance.GetDateNow();
             CreateAt = now;
             LastUpdateAt = now;
@@ -42,9 +42,5 @@ namespace Common.SignalR.Scoped
             }
             return this;
         }
-
-        public static string DefaultScopeGroup = string.Empty;
-        public static string UpdateScopedConnectionBags = "UpdateScopedConnectionBags";
-        public static string CallBackUpdateScopedConnections = "ScopedConnectionsUpdated";
     }
 }

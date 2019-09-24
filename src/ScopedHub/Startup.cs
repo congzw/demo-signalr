@@ -11,7 +11,7 @@ namespace ScopedHub
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSignalR();
-            services.ReplaceAnyHub();
+            services.AddScopedHub();
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)

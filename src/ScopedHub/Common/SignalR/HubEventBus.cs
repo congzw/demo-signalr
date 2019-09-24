@@ -1,80 +1,106 @@
-﻿//using System;
-//using System.Collections.Generic;
-//using System.Linq;
-//using System.Threading.Tasks;
-//using Microsoft.AspNetCore.SignalR;
-//using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
 
-//// ReSharper disable CheckNamespace
+// ReSharper disable CheckNamespace
 
-//namespace Common.SignalR
-//{
-//    public interface IHubEvent
-//    {
-//        DateTime DateTimeEventOccurred { get; }
+namespace Common.SignalR
+{
+    public interface IHubEvent
+    {
+        DateTime RaiseAt { get; }
 
-//        Hub RaiseHub { get; }
-//    }
-//    public abstract class BaseHubEvent : IHubEvent
-//    {
-//        public DateTime DateTimeEventOccurred { get; private set; }
+        Hub RaiseHub { get; }
 
-//        public Hub RaiseHub { get; private set; }
+        HubEventContext Context { get; set; }
+    }
 
-//        protected BaseHubEvent(Hub raiseHub)
-//        {
-//            DateTimeEventOccurred = DateTime.Now;
-//            RaiseHub = raiseHub;
-//        }
-//    }
+    public class HubEventContext
+    {
+        public HubEventContext()
+        {
+            Items = new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        }
+        public IDictionary<string, object> Items { get; set; }
+    }
 
-//    public abstract class BaseHubEvent<T> : BaseHubEvent
-//    {
-//        public T Args { get; set; }
+    public interface IHubEventHandler
+    {
+        float HandleOrder { set; get; }
+        bool ShouldHandle(IHubEvent hubEvent);
+        Task HandleAsync(IHubEvent hubEvent);
+    }
 
-//        protected BaseHubEvent(Hub raiseHub, T args) : base(raiseHub)
-//        {
-//            Args = args;
-//        }
-//    }
+    public class HubEventBus
+    {
+        public IEnumerable<IHubEventHandler> HubEventHandlers { get; }
 
-//    public interface IHubEventHandler
-//    {
-//        float Order { set; get; }
-//        bool ShouldHandle(IHubEvent hubEvent);
-//        Task HandleAsync(IHubEvent hubEvent);
-//    }
+        public HubEventBus(IEnumerable<IHubEventHandler> hubEventHandlers)
+        {
+            HubEventHandlers = hubEventHandlers;
+        }
+        
+        public async Task Raise(IHubEvent hubEvent)
+        {
+            var hubEventHandlers = ResolveHubEventHandlers()
+                .Where(x => x.ShouldHandle(hubEvent))
+                .OrderBy(x => x.HandleOrder)
+                .ToList();
 
-//    public class HubEventBus
-//    {
-//        public HubEventBus(IServiceProvider sp)
-//        {
-//            ServiceProvider = sp;
-//        }
+            foreach (var hubEventHandler in hubEventHandlers)
+            {
+                await hubEventHandler.HandleAsync(hubEvent).ConfigureAwait(false);
+            }
+        }
 
-//        public IServiceProvider ServiceProvider { get; set; }
+        protected IEnumerable<IHubEventHandler> ResolveHubEventHandlers()
+        {
+            if (HubEventHandlers == null)
+            {
+                return Enumerable.Empty<IHubEventHandler>();
+            }
+            return HubEventHandlers;
+        }
+    }
 
-//        public async Task Raise(IHubEvent hubEvent)
-//        {
-//            var hubEventHandlers = ResolveHubEventHandlers()
-//                .Where(x => x.ShouldHandle(hubEvent))
-//                .OrderBy(x => x.Order)
-//                .ToList();
+    public abstract class BaseHubEvent : IHubEvent
+    {
+        protected BaseHubEvent(Hub raiseHub)
+        {
+            RaiseAt = DateTime.Now;
+            RaiseHub = raiseHub;
+        }
 
-//            foreach (var hubEventHandler in hubEventHandlers)
-//            {
-//                await hubEventHandler.HandleAsync(hubEvent).ConfigureAwait(false);
-//            }
-//        }
+        public DateTime RaiseAt { get; private set; }
+        public Hub RaiseHub { get; private set; }
+        public HubEventContext Context { get; set; }
+    }
 
-//        protected IEnumerable<IHubEventHandler> ResolveHubEventHandlers()
-//        {
-//            var eventHandlers = ServiceProvider.GetServices<IHubEventHandler>();
-//            if (eventHandlers == null)
-//            {
-//                return Enumerable.Empty<IHubEventHandler>();
-//            }
-//            return eventHandlers;
-//        }
-//    }
-//}
+    public class HubEventHandleOrders
+    {
+        public float Forward()
+        {
+            return -100;
+        }
+
+        public float Middle()
+        {
+            return 0;
+        }
+
+        public float Backward()
+        {
+            return 100;
+        }
+
+        public float Between(float one, float two)
+        {
+            return (one + two) / 2;
+        }
+
+        public static HubEventHandleOrders Instance = new HubEventHandleOrders();
+    }
+}

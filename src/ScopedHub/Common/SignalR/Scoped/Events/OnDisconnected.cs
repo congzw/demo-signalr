@@ -1,41 +1,45 @@
-﻿//using System;
-//using System.Threading.Tasks;
-//using Microsoft.AspNetCore.SignalR;
-//// ReSharper disable CheckNamespace
+﻿using System;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
+// ReSharper disable CheckNamespace
 
-//namespace Common.SignalR.Scoped.Events
-//{
-//    public class OnDisconnectedEvent : BaseHubEvent<Exception>
-//    {
-//        public OnDisconnectedEvent(Hub raiseHub, Exception args) : base(raiseHub, args)
-//        {
-//        }
-//    }
+namespace Common.SignalR.Scoped
+{
+    public class OnDisconnectedEvent : BaseHubEvent
+    {
+        public Exception Exception { get; set; }
 
-//    public class OnDisconnectedEventHandler : IHubEventHandler
-//    {
-//        private readonly ScopedConnectionManager _scopedConnectionManager;
+        public OnDisconnectedEvent(Hub raiseHub, Exception exception) : base(raiseHub)
+        {
+            Exception = exception;
+        }
+    }
 
-//        public OnDisconnectedEventHandler(ScopedConnectionManager scopedConnectionManager)
-//        {
-//            _scopedConnectionManager = scopedConnectionManager;
-//        }
+    public class OnDisconnectedEventHandler : IHubEventHandler
+    {
+        private readonly ScopedConnectionManager _scopedConnectionManager;
 
-//        public float Order { get; set; }
+        public OnDisconnectedEventHandler(ScopedConnectionManager scopedConnectionManager)
+        {
+            _scopedConnectionManager = scopedConnectionManager;
+            HandleOrder = HubEventHandleOrders.Instance.Forward();
+        }
 
-//        public bool ShouldHandle(IHubEvent hubEvent)
-//        {
-//            return hubEvent is OnDisconnectedEvent;
-//        }
+        public float HandleOrder { get; set; }
 
-//        public async Task HandleAsync(IHubEvent hubEvent)
-//        {
-//            if (!ShouldHandle(hubEvent))
-//            {
-//                return;
-//            }
-//            var theEvent = (OnDisconnectedEvent)hubEvent;
-//            await _scopedConnectionManager.OnDisconnected(theEvent.RaiseHub, theEvent.Args).ConfigureAwait(false);
-//        }
-//    }
-//}
+        public bool ShouldHandle(IHubEvent hubEvent)
+        {
+            return hubEvent is OnDisconnectedEvent;
+        }
+
+        public Task HandleAsync(IHubEvent hubEvent)
+        {
+            if (!ShouldHandle(hubEvent))
+            {
+                return Task.CompletedTask;
+            }
+            var theEvent = (OnDisconnectedEvent)hubEvent;
+            return _scopedConnectionManager.OnDisconnected(theEvent.RaiseHub, theEvent.Exception);
+        }
+    }
+}

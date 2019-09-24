@@ -20,6 +20,13 @@ namespace Common.SignalR.Scoped
 
         public IDictionary<string, HubCallerContext> ScopedContexts { get; set; }
 
+        public HubCallerContext TryGetHubCallerContext(ScopedClientKey scopedClientKey)
+        {
+            var oneKey = scopedClientKey.ToOneKey();
+            ScopedContexts.TryGetValue(oneKey, out var theOne);
+            return theOne;
+        }
+
         public async Task OnConnected(Hub hub)
         {
             var conn = new ScopedConnection();
@@ -103,7 +110,7 @@ namespace Common.SignalR.Scoped
         {
             var scopedConnections = _repository.GetScopedConnections(scopeGroupId);
             var connections = scopedConnections.OrderBy(x => x.CreateAt).ToList();
-            return hub.Clients.Group(scopeGroupId).SendAsync(ScopedConnection.CallBackUpdateScopedConnections, connections);
+            return hub.Clients.Group(scopeGroupId).SendAsync(ScopedConst.ForClient.ScopedConnectionsUpdated(), connections);
         }
 
         private async Task KickSameScopedClient(Hub hub, HubCallerContext oldClientHub, ScopedClientKey scopedClientKey)
@@ -130,7 +137,7 @@ namespace Common.SignalR.Scoped
                         var message = string.Format("{0} is kicked by another same scoped client!", oneKey);
                         theOne.Desc = message;
                     }
-                    await clientProxy.SendAsync(ScopedConnection.CallBackUpdateScopedConnections, connections).ConfigureAwait(false);
+                    await clientProxy.SendAsync(ScopedConst.ForClient.ScopedConnectionsUpdated(), connections).ConfigureAwait(false);
                 }
             }
             _repository.RemoveScopedConnection(oldConnectionId);
