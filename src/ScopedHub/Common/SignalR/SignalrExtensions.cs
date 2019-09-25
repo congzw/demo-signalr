@@ -14,12 +14,18 @@ namespace Common.SignalR
                 return defaultValue;
             }
 
-            if (hub.Context == null)
+            return hub.Context.TryGetQueryParameterValue(queryParameterName, defaultValue);
+        }
+
+        public static T TryGetQueryParameterValue<T>(this HubCallerContext hubCallerContext, string queryParameterName, T defaultValue = default(T))
+        {
+            if (hubCallerContext == null)
             {
                 return defaultValue;
             }
 
-            var httpContext = hub.Context.GetHttpContext();
+
+            var httpContext = hubCallerContext.GetHttpContext();
             if (httpContext == null)
             {
                 return defaultValue;

@@ -13,6 +13,7 @@ Others	Calls a method on all connected clients except the client that invoked th
 ## change list
 
 - 
+- 20190925 add HubContextEvent support
 - 20190924 add HubEventBus
 - 20190920 refact Scoped code
 - 20190919 add same scoped client kicked logic

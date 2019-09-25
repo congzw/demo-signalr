@@ -35,7 +35,7 @@ namespace Common.SignalR.Scoped
                 return;
             }
             var theEvent = (OnConnectedEvent)hubEvent;
-            await _scopedConnectionManager.OnConnected(theEvent.RaiseHub).ConfigureAwait(false);
+            await _scopedConnectionManager.OnConnected(theEvent).ConfigureAwait(false);
         }
     }
 }

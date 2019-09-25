@@ -11,59 +11,15 @@ namespace Common.SignalR
 {
     public interface IHubEvent
     {
+        /// <summary>
+        /// 触发事件的时间
+        /// </summary>
         DateTime RaiseAt { get; }
-
+        /// <summary>
+        /// 在Hub外部触发为null
+        /// 在Hub内触发应被赋值
+        /// </summary>
         Hub RaiseHub { get; }
-
-        HubEventContext Context { get; set; }
-    }
-
-    public class HubEventContext
-    {
-        public HubEventContext()
-        {
-            Items = new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
-        }
-        public IDictionary<string, object> Items { get; set; }
-    }
-
-    public interface IHubEventHandler
-    {
-        float HandleOrder { set; get; }
-        bool ShouldHandle(IHubEvent hubEvent);
-        Task HandleAsync(IHubEvent hubEvent);
-    }
-
-    public class HubEventBus
-    {
-        public IEnumerable<IHubEventHandler> HubEventHandlers { get; }
-
-        public HubEventBus(IEnumerable<IHubEventHandler> hubEventHandlers)
-        {
-            HubEventHandlers = hubEventHandlers;
-        }
-        
-        public async Task Raise(IHubEvent hubEvent)
-        {
-            var hubEventHandlers = ResolveHubEventHandlers()
-                .Where(x => x.ShouldHandle(hubEvent))
-                .OrderBy(x => x.HandleOrder)
-                .ToList();
-
-            foreach (var hubEventHandler in hubEventHandlers)
-            {
-                await hubEventHandler.HandleAsync(hubEvent).ConfigureAwait(false);
-            }
-        }
-
-        protected IEnumerable<IHubEventHandler> ResolveHubEventHandlers()
-        {
-            if (HubEventHandlers == null)
-            {
-                return Enumerable.Empty<IHubEventHandler>();
-            }
-            return HubEventHandlers;
-        }
     }
 
     public abstract class BaseHubEvent : IHubEvent
@@ -76,9 +32,103 @@ namespace Common.SignalR
 
         public DateTime RaiseAt { get; private set; }
         public Hub RaiseHub { get; private set; }
-        public HubEventContext Context { get; set; }
     }
 
+    public abstract class BaseHubContextEvent : BaseHubEvent
+    {
+        public MyHubContext Context { get; private set; }
+        protected BaseHubContextEvent(MyHubContext hubContext) : base(null)
+        {
+            Context = hubContext;
+        }
+
+    }
+
+    public interface ISignalREventHandler
+    {
+        float HandleOrder { set; get; }
+        bool ShouldHandle(IHubEvent hubEvent);
+    }
+
+    public interface IHubEventHandler : ISignalREventHandler
+    {
+        Task HandleAsync(IHubEvent hubEvent);
+    }
+
+    public interface IHubContextEventHandler : ISignalREventHandler
+    {
+        Task HandleHubContextEventAsync(IHubEvent hubEvent);
+    }
+
+    public class HubEventBus
+    {
+        public IEnumerable<IHubEventHandler> HubEventHandlers { get; }
+
+        public HubEventBus(IEnumerable<IHubEventHandler> hubEventHandlers)
+        {
+            HubEventHandlers = hubEventHandlers;
+        }
+
+        public async Task Raise(IHubEvent hubEvent)
+        {
+            var hubEventHandlers = ResolveHubEventHandlers()
+                .Where(x => x.ShouldHandle(hubEvent))
+                .OrderBy(x => x.HandleOrder)
+                .ToList();
+
+            foreach (var hubEventHandler in hubEventHandlers)
+            {
+                try
+                {
+                    if (hubEventHandler is IHubContextEventHandler hubContextEventHandler)
+                    {
+                        await hubContextEventHandler.HandleHubContextEventAsync(hubEvent).ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        await hubEventHandler.HandleAsync(hubEvent).ConfigureAwait(false);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                    throw;
+                }
+            }
+        }
+
+        protected IEnumerable<IHubEventHandler> ResolveHubEventHandlers()
+        {
+            if (HubEventHandlers == null)
+            {
+                return Enumerable.Empty<IHubEventHandler>();
+            }
+            return HubEventHandlers;
+        }
+    }
+    
+    public class MyHubContext
+    {
+        public IHubClients Clients { get; set; }
+        public IGroupManager Groups { get; set; }
+    }
+
+    public static class HubContextExtensions
+    {
+        public static MyHubContext AsMyHubContext<THub>(this IHubContext<THub> context) where THub : Hub
+        {
+            if (context == null)
+            {
+                throw new ArgumentNullException(nameof(context));
+            }
+
+            var hubContext = new MyHubContext();
+            hubContext.Clients = context.Clients;
+            hubContext.Groups = context.Groups;
+            return hubContext;
+        }
+    }
+    
     public class HubEventHandleOrders
     {
         public float Forward()

@@ -39,7 +39,7 @@ namespace Common.SignalR.Scoped
                 return Task.CompletedTask;
             }
             var theEvent = (OnDisconnectedEvent)hubEvent;
-            return _scopedConnectionManager.OnDisconnected(theEvent.RaiseHub, theEvent.Exception);
+            return _scopedConnectionManager.OnDisconnected(theEvent);
         }
     }
 }

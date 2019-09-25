@@ -2,6 +2,7 @@
 using Common.SignalR.Scoped;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace ScopedHub
@@ -10,6 +11,7 @@ namespace ScopedHub
     {
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
             services.AddSignalR();
             services.AddScopedHub();
         }
@@ -32,6 +34,8 @@ namespace ScopedHub
             {
                 routes.MapHub<AnyHub>("/ScopedHub");
             });
+
+            app.UseMvc();
         }
     }
 }
