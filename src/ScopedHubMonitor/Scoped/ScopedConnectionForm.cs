@@ -29,7 +29,7 @@ namespace ScopedHubMonitor.Scoped
             var simpleIniFile = SimpleIni.ResolveFile();
             var items = simpleIniFile.TryLoadIniFileItems("config.ini");
             var scopedConfig = new ScopedConfig();
-            simpleIniFile.SetProperties(items, scopedConfig, null);
+            simpleIniFile.SetProperties(items, scopedConfig, "Scoped");
             var hubUri = string.Format("{0}?ScopeGroupId={1}&ClientId={2}", scopedConfig.HubUri, scopedConfig.ScopeGroupId, scopedConfig.ClientId);
             this.txtHubUri.Text = hubUri;
         }
