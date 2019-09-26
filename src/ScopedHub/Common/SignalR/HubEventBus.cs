@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,24 +8,25 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace Common.SignalR
 {
-    public interface IHubEvent
+    public interface ISignalREvent
     {
         /// <summary>
         /// 触发事件的时间
         /// </summary>
         DateTime RaiseAt { get; }
-        /// <summary>
-        /// 在Hub外部触发为null
-        /// 在Hub内触发应被赋值
-        /// </summary>
-        Hub RaiseHub { get; }
     }
 
-    public abstract class BaseHubEvent : IHubEvent
+    public interface ISignalREventHandler
+    {
+        float HandleOrder { set; get; }
+        bool ShouldHandle(ISignalREvent hubEvent);
+    }
+
+    public abstract class BaseHubEvent : ISignalREvent
     {
         protected BaseHubEvent(Hub raiseHub)
         {
-            RaiseAt = DateTime.Now;
+            RaiseAt = DateHelper.Instance.GetDateNow();
             RaiseHub = raiseHub;
         }
 
@@ -34,30 +34,25 @@ namespace Common.SignalR
         public Hub RaiseHub { get; private set; }
     }
 
-    public abstract class BaseHubContextEvent : BaseHubEvent
+    public abstract class BaseHubContextEvent : ISignalREvent
     {
-        public MyHubContext Context { get; private set; }
-        protected BaseHubContextEvent(MyHubContext hubContext) : base(null)
+        protected BaseHubContextEvent(MyHubContext hubContext)
         {
+            RaiseAt = DateHelper.Instance.GetDateNow();
             Context = hubContext;
         }
-
-    }
-
-    public interface ISignalREventHandler
-    {
-        float HandleOrder { set; get; }
-        bool ShouldHandle(IHubEvent hubEvent);
+        public DateTime RaiseAt { get; private set; }
+        public MyHubContext Context { get; private set; }
     }
 
     public interface IHubEventHandler : ISignalREventHandler
     {
-        Task HandleAsync(IHubEvent hubEvent);
+        Task HandleAsync(ISignalREvent hubEvent);
     }
 
     public interface IHubContextEventHandler : ISignalREventHandler
     {
-        Task HandleHubContextEventAsync(IHubEvent hubEvent);
+        Task HandleHubContextEventAsync(ISignalREvent hubEvent);
     }
 
     public class HubEventBus
@@ -69,7 +64,7 @@ namespace Common.SignalR
             HubEventHandlers = hubEventHandlers;
         }
 
-        public async Task Raise(IHubEvent hubEvent)
+        public async Task Raise(ISignalREvent hubEvent)
         {
             var hubEventHandlers = ResolveHubEventHandlers()
                 .Where(x => x.ShouldHandle(hubEvent))
@@ -91,6 +86,7 @@ namespace Common.SignalR
                 }
                 catch (Exception e)
                 {
+                    //todo log
                     Console.WriteLine(e);
                     throw;
                 }
@@ -106,7 +102,7 @@ namespace Common.SignalR
             return HubEventHandlers;
         }
     }
-    
+
     public class MyHubContext
     {
         public IHubClients Clients { get; set; }
@@ -128,7 +124,7 @@ namespace Common.SignalR
             return hubContext;
         }
     }
-    
+
     public class HubEventHandleOrders
     {
         public float Forward()

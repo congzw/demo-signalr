@@ -9,8 +9,6 @@ namespace Common.SignalR.Scoped
 {
     public class OnUpdateBagsEvent : BaseHubEvent
     {
-        public string ClientId { get; set; }
-        public string ScopeGroupId { get; set; }
         public IDictionary<string, object> Bags { get; }
 
         public OnUpdateBagsEvent(Hub raiseHub, IDictionary<string, object> bags) : base(raiseHub)
@@ -46,12 +44,12 @@ namespace Common.SignalR.Scoped
 
         public float HandleOrder { get; set; }
 
-        public bool ShouldHandle(IHubEvent hubEvent)
+        public bool ShouldHandle(ISignalREvent hubEvent)
         {
             return hubEvent is OnUpdateBagsEvent || hubEvent is OnUpdateBagsHubContextEvent;
         }
 
-        public async Task HandleAsync(IHubEvent hubEvent)
+        public async Task HandleAsync(ISignalREvent hubEvent)
         {
             if (!ShouldHandle(hubEvent))
             {
